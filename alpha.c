@@ -5,12 +5,12 @@
 #define MXY 5
 #define MXX 900
 
-char str[] = "PALJETTKUNGEN";
+char str[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 char alpha[26][6] = {
     {30, 5, 5, 30},
     {31, 21, 21, 10},
-    {14, 17, 14},
+    {14, 17, 17},
     {31, 17, 17, 14},
     {31, 21, 21},
     {31, 5, 5},
@@ -36,49 +36,42 @@ char alpha[26][6] = {
     {25, 21, 19, 17}
 };
 
-static int getclen(char ch) {
+// Voodoo
+static int getlen(char *str) {
 
     int ret = 0;
 
-    while(alpha[(ch - 'A')][ret]) ret++;
+    do { ret += 1 + (*str == ' ' ? 3 : strlen(alpha[(*str - 'A')]));
+    } while(*++str);
 
-    return ret;
+    return --ret;
 }
 
-static int getlen(char *str, const int slen) {
+static void addchar(char **board, char ch, int *pos) {
 
-    int ret = 0;
+    if(ch == ' ') *pos += 3;
+    else  {
+        char *lnptr = alpha[(ch - 'A')];
 
-    for(int i = 0; i < slen; i++) ret += getclen(str[i]);
-
-    return ret + slen - 1;
-}
-
-static int addchar(char **board, char ch, int pos) {
-
-    char *lnptr = alpha[(ch - 'A')];
-
-    while(*lnptr) {
-        board[4][pos] = *lnptr & 16;
-        board[3][pos] = *lnptr & 8;
-        board[2][pos] = *lnptr & 4;
-        board[1][pos] = *lnptr & 2;
-        board[0][pos] = *lnptr & 1;
-        pos++;
-        lnptr++;
+        while(*lnptr) {
+            board[4][*pos] = *lnptr & 16;
+            board[3][*pos] = *lnptr & 8;
+            board[2][*pos] = *lnptr & 4;
+            board[1][*pos] = *lnptr & 2;
+            board[0][*pos] = *lnptr & 1;
+            *pos += 1;
+            lnptr++;
+        }
     }
 
-    return ++pos;
+    *pos += 1;
 }
 
-static void fillboard(char **board, char *str, const int slen) {
+static void fillboard(char **board, char *str) {
 
-    int bpos, spos;
+    int bpos = 0;
 
-    for(spos = 0; spos < slen; spos++) {
-        bpos = addchar(board, str[spos], bpos);
-    }
-
+    while(*str) addchar(board, *str++, &bpos);
 }
 
 static void printboard(char **board, const int mxy, const int mxx) {
@@ -108,14 +101,11 @@ static void freeboard(char **board, const int y) {
 
 int main(void) {
 
-    int slen = strlen(str);
-    int bx = getlen(str, slen);
+    int bx = getlen(str);
 
     char **board = mkboard(MXY, bx);
 
-    // printf("bx: %d\n", bx);
-
-    fillboard(board, str, slen);
+    fillboard(board, str);
 
     printboard(board, MXY, bx);
 
