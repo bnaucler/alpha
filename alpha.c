@@ -5,7 +5,7 @@
 #define MXY 5
 #define MXX 900
 
-char str[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+char str[] = "ABCDE FGHIJ KLMNO PQRST UVWXYZ";
 
 char alpha[26][6] = {
     {30, 5, 5, 30},
@@ -47,31 +47,26 @@ static int getlen(char *str) {
     return --ret;
 }
 
-static void addchar(char **board, char ch, int *pos) {
+static void addchar(char **board, char ch, int *pos, const int mxy) {
 
     if(ch == ' ') *pos += 3;
     else  {
-        char *lnptr = alpha[(ch - 'A')];
+        char *ptr = alpha[(ch - 'A')];
 
-        while(*lnptr) {
-            board[4][*pos] = *lnptr & 16;
-            board[3][*pos] = *lnptr & 8;
-            board[2][*pos] = *lnptr & 4;
-            board[1][*pos] = *lnptr & 2;
-            board[0][*pos] = *lnptr & 1;
+        do {
+            for(int y = 0; y < mxy; y++) board[y][*pos] = *ptr & 1 << y;
             *pos += 1;
-            lnptr++;
-        }
+        } while(*++ptr);
     }
 
     *pos += 1;
 }
 
-static void fillboard(char **board, char *str) {
+static void fillboard(char **board, char *str, const int y) {
 
-    int bpos = 0;
+    int pos = 0;
 
-    while(*str) addchar(board, *str++, &bpos);
+    while(*str) addchar(board, *str++, &pos, y);
 }
 
 static void printboard(char **board, const int mxy, const int mxx) {
@@ -105,8 +100,7 @@ int main(void) {
 
     char **board = mkboard(MXY, bx);
 
-    fillboard(board, str);
-
+    fillboard(board, str, MXY);
     printboard(board, MXY, bx);
 
     freeboard(board, MXY);
