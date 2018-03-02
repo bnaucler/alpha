@@ -5,14 +5,16 @@
 #define MXY 5
 #define MXX 900
 
+#define TXX 18 // X axis of time display matrix
+
 char msg[] = "ABCDE FGHIJ KLMNO PQRST UVWXYZ";
 
 char num[10][4] = {
     {31, 17, 31},
-    {2, 31, 0},
+    {18, 31, 16},
     {29, 21, 21},
     {21, 21, 31},
-    {3, 2, 31},
+    {7, 4, 31},
     {23, 21, 29},
     {31, 21, 29},
     {1, 1, 31},
@@ -60,16 +62,20 @@ static int getlen(char *str) {
     return --ret;
 }
 
+static void addsym(char **board, const int mxy, int *pos, char *ptr) {
+
+    do {
+        for(int y = 0; y < mxy; y++) board[y][*pos] = *ptr & 1 << y;
+        (*pos)++;
+    } while(*++ptr);
+}
+
 static void addchar(char **board, char ch, int *pos, const int mxy) {
 
     if(ch == ' ') *pos += 3;
     else  {
         char *ptr = alpha[(ch - 'A')];
-
-        do {
-            for(int y = 0; y < mxy; y++) board[y][*pos] = *ptr & 1 << y;
-            (*pos)++;
-        } while(*++ptr);
+        addsym(board, mxy, pos, ptr);
     }
 
     (*pos)++;
@@ -82,11 +88,56 @@ static void fillboard(char **board, char *str, const int y) {
     while(*str) addchar(board, *str++, &pos, y);
 }
 
+static void csec(char **board, const int mxy, int s) {
+
+    int pos = 6; // offset when only displaying seconds
+
+    char *ptr = num[(s / 10)]; // what if 1?
+    addsym(board, mxy, &pos, ptr);
+    pos++;
+
+    ptr = num[(s % 10)];
+    addsym(board, mxy, &pos, ptr);
+}
+
+// ugly
+static void cmin(char **board, const int mxy, const int m, const int s) {
+
+    int pos = 0;
+
+    char *ptr = num[(m / 10)];
+    addsym(board, mxy, &pos, ptr);
+    pos++;
+
+    ptr = num[(m % 10)];
+    addsym(board, mxy, &pos, ptr);
+    pos++;
+
+    for(int y = 0; y < mxy; y++) board[y][pos] = 10 & 1 << y;
+    pos++;
+    pos++;
+
+    ptr = num[(s / 10)];
+    addsym(board, mxy, &pos, ptr);
+    pos++;
+
+    ptr = num[(s % 10)];
+    addsym(board, mxy, &pos, ptr);
+    pos++;
+}
+
+static void ftboard(char **board, const int mxy, const int s) {
+
+    int m = s / 60;
+
+    if(!m) csec(board, mxy, s % 60);
+    else cmin(board, mxy, m, s % 60);
+}
+
 static void printboard(char **board, const int mxy, const int mxx) {
 
     for(int y = 0; y < mxy; y++) {
-        for(int x = 0; x < 50; x++) {
-        // for(int x = 0; x < mxx; x++) {
+        for(int x = 0; x < mxx; x++) {
             putchar(board[y][x] ? '#' : ' ');
         }
         putchar('\n');
@@ -112,14 +163,18 @@ int main(void) {
 
     int bx = getlen(msg);
 
-    printf("len: %d\n", bx);
+    // printf("len: %d\n", bx);
 
     char **board = mkboard(MXY, bx);
+    char **tboard = mkboard(MXY, 18);
 
-    fillboard(board, msg, MXY);
-    printboard(board, MXY, bx);
+    // fillboard(board, msg, MXY);
+    ftboard(tboard, MXY, 214);
+    // printboard(board, MXY, bx);
+    printboard(tboard, MXY, 18);
 
     freeboard(board, MXY);
+    freeboard(tboard, MXY);
 
     return 0;
 }
