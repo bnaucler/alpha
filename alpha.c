@@ -88,50 +88,38 @@ static void fillboard(char **board, char *str, const int y) {
     while(*str) addchar(board, *str++, &pos, y);
 }
 
-static void csec(char **board, const int mxy, int s) {
+static void tpair(char **board, const int mxy, int *pos, int s) {
 
-    int pos = 6; // offset when only displaying seconds
-
-    char *ptr = num[(s / 10)]; // what if 1?
-    addsym(board, mxy, &pos, ptr);
-    pos++;
+    char *ptr = num[(s / 10)];
+    addsym(board, mxy, pos, ptr);
+    (*pos)++;
 
     ptr = num[(s % 10)];
-    addsym(board, mxy, &pos, ptr);
+    addsym(board, mxy, pos, ptr);
 }
 
-// ugly
-static void cmin(char **board, const int mxy, const int m, const int s) {
+static void cmin(char **board, const int mxy, int *pos, int s) {
 
-    int pos = 0;
+    tpair(board, mxy, pos, s / 60);
+    (*pos)++;
 
-    char *ptr = num[(m / 10)];
-    addsym(board, mxy, &pos, ptr);
-    pos++;
+    for(int y = 0; y < mxy; y++) board[y][*pos] = 10 & 1 << y; // 10 for colon
+    *pos += 2;
 
-    ptr = num[(m % 10)];
-    addsym(board, mxy, &pos, ptr);
-    pos++;
-
-    for(int y = 0; y < mxy; y++) board[y][pos] = 10 & 1 << y;
-    pos++;
-    pos++;
-
-    ptr = num[(s / 10)];
-    addsym(board, mxy, &pos, ptr);
-    pos++;
-
-    ptr = num[(s % 10)];
-    addsym(board, mxy, &pos, ptr);
-    pos++;
+    tpair(board, mxy, pos, s % 60);
 }
 
 static void ftboard(char **board, const int mxy, const int s) {
 
-    int m = s / 60;
+    int pos = 0;
 
-    if(!m) csec(board, mxy, s % 60);
-    else cmin(board, mxy, m, s % 60);
+    if(!(s / 60)) {
+        pos += 6;
+        tpair(board, mxy, &pos, s % 60);
+
+    } else {
+        cmin(board, mxy, &pos, s);
+    }
 }
 
 static void printboard(char **board, const int mxy, const int mxx) {
